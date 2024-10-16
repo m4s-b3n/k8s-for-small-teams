@@ -1,0 +1,35 @@
+{
+  "name": "Ubuntu",
+  "image": "mcr.microsoft.com/devcontainers/base:noble",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "azureDnsAutoDetection": true,
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "installTFsec": true,
+      "installTerraformDocs": true,
+      "version": "latest",
+      "tflint": "latest",
+      "terragrunt": "latest"
+    },
+    "ghcr.io/rjfmachado/devcontainer-features/cloud-native:1": {
+      "kubectl": "latest",
+      "helm": "latest",
+      "kubelogin": "none",
+      "azwi": "none",
+      "flux": "none",
+      "cilium": "none"
+    }
+  }
+}

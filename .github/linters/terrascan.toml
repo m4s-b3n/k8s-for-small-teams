@@ -1,0 +1,7 @@
+[severity]
+level = "medium"
+[rules]
+skip-rules = [
+    "accurics.azure.NS.161",
+    "accurics.azure.NS.272"
+]
