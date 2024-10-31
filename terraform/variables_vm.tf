@@ -1,19 +1,42 @@
+variable "vm_name" {
+  description = "The name of the Virtual Machine."
+  type        = string
+  default     = "vm-k8s-for-small-teams"
+}
+
+variable "vm_admin_username" {
+  description = "The username of the Virtual Machine."
+  type        = string
+  default     = "azureuser"
+}
+
 variable "vm_image_os" {
   description = "The OS image to use for the Virtual Machine."
   type        = string
   default     = "linux"
 }
 
-variable "vm_os_simple" {
-  description = "The OS image to use for the Virtual Machine."
+variable "vm_size" {
+  description = "The size of the Virtual Machine."
   type        = string
-  default     = "UbuntuServer"
+  default     = "Standard_D4s_v3"
 }
 
-variable "vm_name" {
-  description = "The name of the Virtual Machine."
-  type        = string
-  default     = "vm-k8s-for-small-teams"
+variable "vm_source_image_reference" {
+  description = "The source image reference for the Virtual Machine."
+  type = object({
+    publisher = string
+    offer     = string
+    sku       = string
+    version   = string
+  })
+  default = {
+    # see https://documentation.ubuntu.com/azure/en/latest/azure-how-to/instances/find-ubuntu-images/ 
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
 }
 
 variable "vm_os_disk" {
@@ -36,12 +59,6 @@ variable "vm_os_disk" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
-}
-
-variable "vm_size" {
-  description = "The size of the Virtual Machine."
-  type        = string
-  default     = "Standard_D4s_v3"
 }
 
 variable "vm_data_disks" {
@@ -100,12 +117,6 @@ variable "vm_data_disks" {
       caching = "ReadWrite"
     }
   }]
-}
-
-variable "vm_admin_username" {
-  description = "The username of the Virtual Machine."
-  type        = string
-  default     = "azureuser"
 }
 
 variable "vm_public_ips" {

@@ -2,7 +2,7 @@
 
 Demo for k8s usage in small teams
 
-## Setup with terraform
+## Setup Azure VM with Terraform
 
 ```bash
 # switch to terraform dir
@@ -16,4 +16,40 @@ terraform apply -auto-approve
 
 # ssh into machine
 ssh -o StrictHostKeyChecking=no -i $(terraform output -raw ssh_private_key_file) $(terraform output -raw ssh_username)@$(terraform output -raw ssh_fqdn)
+```
+
+## Setup MicroK8s manually
+
+```bash
+# setup
+sudo snap install microk8s --classic
+
+# join group
+sudo usermod -a -G microk8s $USER
+mkdir -p ~/.kube
+chmod 0700 ~/.kube
+sudo su - $USER
+
+# wait till ready
+microk8s status --wait-ready
+
+# test
+microk8s kubectl get nodes
+
+# add core-dns
+microk8s enable dns
+
+# add ingress
+microk8s enable ingress
+
+# add hostpath-storage
+microk8s enable hostpath-storage
+
+# add metallb
+export ADDRESS_SPACE=<ADDRESS_SPACE>
+microk8s enable metallb $ADDRESS_SPACE
+
+# add alias
+echo "alias kubectl='microk8s kubectl'" >> ~/.bash_aliases
+source ~/.bash_aliases
 ```

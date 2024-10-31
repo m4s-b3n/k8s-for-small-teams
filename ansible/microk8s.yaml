@@ -1,0 +1,69 @@
+---
+- name: Install microk8s and kubectl
+  become: true
+  hosts: all
+  tasks:
+    - name: Install
+      community.general.snap:
+        classic: true
+        channel: 1.31
+        name:
+          - microk8s
+          - kubectl
+
+- name: Preparing User
+  become: true
+  hosts: all
+  tasks:
+    - name: Add user to microk8s group
+      ansible.builtin.user:
+        name: "{{ microk8s_user }}"
+        groups: microk8s
+        append: true
+    - name: Reset connection
+      ansible.builtin.meta: reset_connection
+
+- name: Change kube folder ownership
+  become: true
+  hosts: all
+  tasks:
+    - name: Change ownership
+      ansible.builtin.file:
+        path: /home/{{ microk8s_user }}/.kube
+        owner: "{{ microk8s_user }}"
+        group: "{{ microk8s_user }}"
+        state: directory
+        mode: "0600"
+
+- name: Enable microk8s common modules
+  become: true
+  hosts: all
+  tasks:
+    - name: Enable module
+      ansible.builtin.command: microk8s enable {{ item }}
+      loop: "{{ microk8s_modules }}"
+      changed_when: false
+
+- name: Create kubeconfig and alias
+  become: true
+  hosts: all
+  tasks:
+    - name: Create microk8s alias
+      ansible.builtin.lineinfile:
+        path: /home/{{ microk8s_user }}/.bash_aliases
+        line: alias kubectl='microk8s kubectl'
+        create: true
+        owner: "{{ microk8s_user }}"
+        group: "{{ microk8s_user }}"
+        mode: "0600"
+    - name: Run microk8s config command
+      ansible.builtin.command: microk8s config
+      register: microk8s_config_output
+      changed_when: false
+    - name: Write microk8s config to kubeconfig file
+      ansible.builtin.copy:
+        content: "{{ microk8s_config_output.stdout }}"
+        dest: /home/{{ microk8s_user }}/.kube/config
+        owner: "{{ microk8s_user }}"
+        group: "{{ microk8s_user }}"
+        mode: "0600"

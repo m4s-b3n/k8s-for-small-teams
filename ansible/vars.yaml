@@ -1,0 +1,7 @@
+---
+microk8s_user: azureuser
+microk8s_modules:
+  - dns
+  - ingress
+  - hostpath-storage
+  - metallb 127.0.0.1-127.0.0.1

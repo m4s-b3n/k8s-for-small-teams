@@ -28,8 +28,12 @@ module "network-security-group" {
       priority = 100
     },
     {
-      name     = "SSH"
+      name     = "HTTP"
       priority = 101
+    },
+    {
+      name     = "SSH"
+      priority = 102
     }
   ]
   tags       = var.tags
@@ -64,17 +68,17 @@ resource "local_file" "ssh_private_key" {
 }
 
 module "virtual-machine" {
-  source              = "Azure/virtual-machine/azurerm"
-  version             = "1.1.0"
-  image_os            = var.vm_image_os
-  os_simple           = var.vm_os_simple
-  location            = var.location
-  name                = var.vm_name
-  os_disk             = var.vm_os_disk
-  resource_group_name = azurerm_resource_group.this.name
-  size                = var.vm_size
-  subnet_id           = one(module.network.vnet_subnets)
-  data_disks          = var.vm_data_disks
+  source                 = "Azure/virtual-machine/azurerm"
+  version                = "1.1.0"
+  image_os               = var.vm_image_os
+  source_image_reference = var.vm_source_image_reference
+  location               = var.location
+  name                   = var.vm_name
+  os_disk                = var.vm_os_disk
+  resource_group_name    = azurerm_resource_group.this.name
+  size                   = var.vm_size
+  subnet_id              = one(module.network.vnet_subnets)
+  data_disks             = var.vm_data_disks
   new_network_interface = {
     ip_forwarding_enabled = false
     ip_configurations     = local.vm_ip_configurations
@@ -85,5 +89,6 @@ module "virtual-machine" {
       public_key = tls_private_key.this.public_key_openssh
     }
   ]
-  tags = var.tags
+  custom_data = data.cloudinit_config.this.rendered
+  tags        = var.tags
 }
