@@ -14,7 +14,7 @@
       "dockerDashComposeVersion": "latest"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "latest"
+      "version": "8.0"
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "installTFsec": true,
@@ -30,6 +30,8 @@
       "azwi": "none",
       "flux": "none",
       "cilium": "none"
-    }
+    },
+    "ghcr.io/larsnieuwenhuizen/features/jqyq:0": {},
+    "ghcr.io/devcontainers-extra/features/ansible:2": {}
   }
 }
