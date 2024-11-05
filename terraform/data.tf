@@ -6,8 +6,10 @@ data "cloudinit_config" "this" {
     filename     = "cloud-config.yaml"
     content_type = "text/cloud-config"
     content = templatefile("${path.module}/cloud-config.yaml.tpl", {
-      admin_username     = var.vm_admin_username
+      vm_username        = var.vm_admin_username
       vnet_address_space = var.vnet_address_space
+      monitoring_fqdn    = azurerm_public_ip.monitoring.fqdn
+      branch             = var.branch
     })
   }
 }

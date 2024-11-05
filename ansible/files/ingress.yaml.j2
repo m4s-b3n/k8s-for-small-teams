@@ -1,0 +1,19 @@
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ingress-grafana
+  namespace: observability
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ monitoring_fqdn }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prom-stack-grafana
+                port:
+                  number: 80

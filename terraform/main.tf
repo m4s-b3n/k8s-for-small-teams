@@ -45,13 +45,21 @@ resource "azurerm_subnet_network_security_group_association" "this" {
   network_security_group_id = module.network-security-group.network_security_group_id
 }
 
-resource "azurerm_public_ip" "this" {
-  for_each            = var.vm_public_ips
+resource "azurerm_public_ip" "app" {
   allocation_method   = "Dynamic"
   location            = var.location
-  name                = "pip-${each.key}"
+  name                = "pip-app"
   resource_group_name = azurerm_resource_group.this.name
-  domain_name_label   = each.value.domain_name_label
+  domain_name_label   = var.vm_application_dns_label
+  tags                = var.tags
+}
+
+resource "azurerm_public_ip" "monitoring" {
+  allocation_method   = "Dynamic"
+  location            = var.location
+  name                = "pip-monitoring"
+  resource_group_name = azurerm_resource_group.this.name
+  domain_name_label   = var.vm_monitoring_dns_label
   tags                = var.tags
 }
 
@@ -81,7 +89,14 @@ module "virtual-machine" {
   data_disks             = var.vm_data_disks
   new_network_interface = {
     ip_forwarding_enabled = false
-    ip_configurations     = local.vm_ip_configurations
+    ip_configurations = [{
+      public_ip_address_id = azurerm_public_ip.app.id
+      primary              = true
+      }, {
+      public_ip_address_id = azurerm_public_ip.monitoring.id
+      primary              = false
+      }
+    ]
   }
   admin_username = var.vm_admin_username
   admin_ssh_keys = [

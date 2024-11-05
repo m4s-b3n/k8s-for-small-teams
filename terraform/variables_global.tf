@@ -12,3 +12,9 @@ variable "tags" {
     project     = "k8s-for-small-teams"
   }
 }
+
+variable "branch" {
+  description = "The branch of the git repository to deploy."
+  type        = string
+  default     = "main"
+}

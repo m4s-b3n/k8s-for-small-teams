@@ -119,20 +119,14 @@ variable "vm_data_disks" {
   }]
 }
 
-variable "vm_public_ips" {
-  description = "The domain name labels of the Virtual Machine."
-  type = map(object({
-    domain_name_label = string
-    primary           = bool
-  }))
-  default = {
-    app = {
-      domain_name_label = "app-demo-k8s-for-small-teams"
-      primary           = true
-    },
-    monitoring = {
-      domain_name_label = "monitoring-demo-k8s-for-small-teams"
-      primary           = false
-    }
-  }
+variable "vm_application_dns_label" {
+  description = "The DNS label for the public IP address for the application."
+  type        = string
+  default     = "app-demo-k8s-for-small-teams"
+}
+
+variable "vm_monitoring_dns_label" {
+  description = "The DNS label for the public IP address for the monitoring."
+  type        = string
+  default     = "monitoring-demo-k8s-for-small-teams"
 }

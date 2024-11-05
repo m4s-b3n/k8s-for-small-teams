@@ -3,5 +3,9 @@ microk8s_user: azureuser
 microk8s_modules:
   - dns
   - ingress
+  - helm
   - hostpath-storage
-  - metallb 127.0.0.1-127.0.0.1
+  - observability
+  - metallb 127.0.0.1/32
+app_fqdn: app-demo-k8s-for-small-teams.northeurope.cloudapp.azure.com
+monitoring_fqdn: monitoring-demo-k8s-for-small-teams.northeurope.cloudapp.azure.com

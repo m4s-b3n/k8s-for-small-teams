@@ -18,7 +18,19 @@ terraform apply -auto-approve
 ssh -o StrictHostKeyChecking=no -i $(terraform output -raw ssh_private_key_file) $(terraform output -raw ssh_username)@$(terraform output -raw ssh_fqdn)
 ```
 
-## Setup MicroK8s manually
+## Further steps
+
+### Access grafana
+
+URL: http://monitoring-demo-k8s-for-small-teams.northeurope.cloudapp.azure.com/login
+
+Get Username: `kubectl -n observability get secret kube-prom-stack-grafana -o jsonpath='{.data.admin-user}' | base64 -d`)
+
+Get Password: `kubectl -n observability get secret kube-prom-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d`
+
+## Manual setup
+
+### Setup MicroK8s manually
 
 ```bash
 # setup

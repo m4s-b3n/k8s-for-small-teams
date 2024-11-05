@@ -17,7 +17,7 @@
   tasks:
     - name: Add user to microk8s group
       ansible.builtin.user:
-        name: "{{ microk8s_user }}"
+        name: "{{ vm_username }}"
         groups: microk8s
         append: true
     - name: Reset connection
@@ -29,11 +29,11 @@
   tasks:
     - name: Change ownership
       ansible.builtin.file:
-        path: /home/{{ microk8s_user }}/.kube
-        owner: "{{ microk8s_user }}"
-        group: "{{ microk8s_user }}"
+        path: /home/{{ vm_username }}/.kube
+        owner: "{{ vm_username }}"
+        group: "{{ vm_username }}"
         state: directory
-        mode: "0600"
+        mode: "0700"
 
 - name: Enable microk8s common modules
   become: true
@@ -44,18 +44,10 @@
       loop: "{{ microk8s_modules }}"
       changed_when: false
 
-- name: Create kubeconfig and alias
+- name: Create local kubeconfig
   become: true
   hosts: all
   tasks:
-    - name: Create microk8s alias
-      ansible.builtin.lineinfile:
-        path: /home/{{ microk8s_user }}/.bash_aliases
-        line: alias kubectl='microk8s kubectl'
-        create: true
-        owner: "{{ microk8s_user }}"
-        group: "{{ microk8s_user }}"
-        mode: "0600"
     - name: Run microk8s config command
       ansible.builtin.command: microk8s config
       register: microk8s_config_output
@@ -63,7 +55,23 @@
     - name: Write microk8s config to kubeconfig file
       ansible.builtin.copy:
         content: "{{ microk8s_config_output.stdout }}"
-        dest: /home/{{ microk8s_user }}/.kube/config
-        owner: "{{ microk8s_user }}"
-        group: "{{ microk8s_user }}"
+        dest: /home/{{ vm_username }}/.kube/config
+        owner: "{{ vm_username }}"
+        group: "{{ vm_username }}"
         mode: "0600"
+
+- name: Setup k8s
+  become: true
+  hosts: all
+  tasks:
+    - name: Setup LoadBalancer for NGINX
+      ansible.builtin.command: microk8s kubectl apply -f "{{playbook_dir}}/files/loadbalancer.yaml"
+      changed_when: false
+    - name: Prepare Grafana Ingress
+      ansible.builtin.template:
+        src: "{{playbook_dir}}/files/ingress.yaml.j2"
+        dest: "{{playbook_dir}}/files/ingress.yaml"
+        mode: "0600"
+    - name: Setup Grafana Ingress
+      ansible.builtin.command: microk8s kubectl apply -f "{{playbook_dir}}/files/ingress.yaml"
+      changed_when: false

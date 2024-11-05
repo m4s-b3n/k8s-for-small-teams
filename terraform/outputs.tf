@@ -1,14 +1,5 @@
-# output "public_ips" {
-#   value = {
-#     for key, value in azurerm_public_ip.this : key => {
-#       ip   = data.azurerm_public_ip.this[key].ip_address
-#       fqdn = azurerm_public_ip.this[key].fqdn
-#     }
-#   }
-# }
-
 output "ssh_fqdn" {
-  value = try(local.vm_primary_fqdn[0], null)
+  value = azurerm_public_ip.app.fqdn
 }
 
 output "ssh_username" {
