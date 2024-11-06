@@ -10,6 +10,12 @@ variable "vm_admin_username" {
   default     = "azureuser"
 }
 
+variable "vm_local_keyfile" {
+  description = "Path of a local SSH private key file."
+  type        = string
+  default     = null
+}
+
 variable "vm_image_os" {
   description = "The OS image to use for the Virtual Machine."
   type        = string

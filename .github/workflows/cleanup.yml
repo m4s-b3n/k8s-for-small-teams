@@ -1,0 +1,44 @@
+name: Cleanup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.ref }}
+      cancel-in-progress: false
+    environment:
+      name: cleanup
+    env:
+      ARM_USE_OIDC: true
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      TF_VAR_keyvault_name: ${{ vars.KEYVAULT_NAME }}
+      TF_VAR_keyvault_resource_group: ${{ vars.KEYVAULT_RESOURCE_GROUP }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Deploy microk8s
+        uses: infinite-automations/terraform-all-in-one@v1.2.0
+        with:
+          init-args: >-
+            -backend-config='resource_group_name=${{ vars.BACKEND_RESOURCE_GROUP }}'
+            -backend-config='storage_account_name=${{ vars.BACKEND_STORAGE_ACCOUNT }}'
+            -backend-config='container_name=${{ vars.BACKEND_CONTAINER_NAME }}'
+            -backend-config='key=k8s-for-small-teams/infra/terraform.tfstate'
+          directory: "terraform"
+          format: false
+          validate: false
+          plan: false
+          apply: false
+          destroy: true

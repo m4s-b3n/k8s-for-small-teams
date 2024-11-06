@@ -1,5 +1,5 @@
 # Project Specific
-#backend.tf
+backend.tf
 key.pem
 
 # Local .terraform directories
