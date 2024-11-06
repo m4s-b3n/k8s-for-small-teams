@@ -7,5 +7,5 @@ output "ssh_username" {
 }
 
 output "ssh_private_key_file" {
-  value = local.ssh_key_file
+  value = var.vm_local_keyfile
 }

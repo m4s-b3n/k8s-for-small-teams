@@ -1,3 +1,3 @@
 locals {
-  ssh_key_file = "${path.module}/key.pem"
+  store_secrets = (var.keyvault_name != null && var.keyvault_resource_group != null)
 }

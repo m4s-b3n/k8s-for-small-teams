@@ -70,7 +70,8 @@ resource "tls_private_key" "this" {
 }
 
 resource "local_file" "ssh_private_key" {
-  filename        = local.ssh_key_file
+  count           = var.vm_local_keyfile != null ? 1 : 0
+  filename        = var.vm_local_keyfile
   content         = tls_private_key.this.private_key_pem
   file_permission = "0400"
 }

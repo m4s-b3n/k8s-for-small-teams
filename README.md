@@ -1,8 +1,21 @@
 # k8s-for-small-teams
 
-Demo for k8s usage in small teams
+Demo for k8s usage in small teams. Usually on-premise VMs are already present.
 
-## Setup Azure VM with Terraform
+All you need is:
+1. An ubuntu virtual machine
+2. At least 2 DNS names for your machine
+3. A SSH key to access the machine with root privileges
+
+## Quickstart
+
+Deploy to azure using thw workflow [![Deploy](https://github.com/m4s-b3n/k8s-for-small-teams/actions/workflows/deploy.yml/badge.svg)](https://github.com/m4s-b3n/k8s-for-small-teams/actions/workflows/deploy.yml)
+
+Do not forget to clean up your deployment using the workflow [![Cleanup](https://github.com/m4s-b3n/k8s-for-small-teams/actions/workflows/cleanup.yml/badge.svg)](https://github.com/m4s-b3n/k8s-for-small-teams/actions/workflows/cleanup.yml)
+
+## Dev
+
+### Setup Azure VM with Terraform
 
 ```bash
 # switch to terraform dir
@@ -11,6 +24,9 @@ cd terraform
 # init terraform
 terraform init
 
+# for SSH access
+export TF_VAR_vm_local_keyfile="~/.ssh/key.pem"
+
 # apply configuration
 terraform apply -auto-approve
 
@@ -18,17 +34,13 @@ terraform apply -auto-approve
 ssh -o StrictHostKeyChecking=no -i $(terraform output -raw ssh_private_key_file) $(terraform output -raw ssh_username)@$(terraform output -raw ssh_fqdn)
 ```
 
-## Further steps
-
 ### Access grafana
 
-URL: http://monitoring-demo-k8s-for-small-teams.northeurope.cloudapp.azure.com/login
+URL: [grafana](http://monitoring-demo-k8s-for-small-teams.northeurope.cloudapp.azure.com/login)
 
 Get Username: `kubectl -n observability get secret kube-prom-stack-grafana -o jsonpath='{.data.admin-user}' | base64 -d`)
 
 Get Password: `kubectl -n observability get secret kube-prom-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d`
-
-## Manual setup
 
 ### Setup MicroK8s manually
 
