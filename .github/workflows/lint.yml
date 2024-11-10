@@ -9,19 +9,20 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: read
-  statuses: write
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -1,3 +1,11 @@
 ---
+roles:
+  - name: geerlingguy.pip
+    version: 3.1.0
 collections:
-  - community.general
+  - name: community.general
+    version: 9.5.1
+    source: https://galaxy.ansible.com
+  - name: kubernetes.core
+    version: 3.2.0
+    source: https://galaxy.ansible.com

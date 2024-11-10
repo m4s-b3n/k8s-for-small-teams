@@ -2,20 +2,46 @@ name: Cleanup
 
 on:
   workflow_dispatch:
+    inputs:
+      shutdown-runners:
+        type: boolean
+        description: "Shutdown the runners"
+        required: true
+        default: true
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 jobs:
-  deploy:
+  shutdown:
+    name: Shutdown Runners
+    if: ${{ inputs.shutdown-runners }}
+    runs-on: k8s-for-small-teams
+    environment:
+      name: cleanup
+    container:
+      image: alpine:latest
+    continue-on-error: true
+    steps:
+      - name: Install helm
+        run: apk add helm --no-cache
+      - name: Shutdown runners
+        run: |
+          echo "Shutting down runners"
+          helm uninstall k8s-for-small-teams -n actions-runner
+
+  terraform:
     name: Cleanup
+    if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: ${{ github.ref }}
       cancel-in-progress: false
     environment:
       name: cleanup
+    needs: shutdown
     env:
       ARM_USE_OIDC: true
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

@@ -61,7 +61,7 @@ variable "github_app" {
   type = object({
     id              = string
     installation_id = string
-    pem_file        = string
+    private_key     = string
   })
   sensitive = true
   default   = null

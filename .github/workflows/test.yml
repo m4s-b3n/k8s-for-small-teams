@@ -1,0 +1,27 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: false
+        description: "The job environment"
+
+permissions: {}
+
+jobs:
+  test:
+    name: Test
+    runs-on: k8s-for-small-teams
+    environment:
+      name: ${{ inputs.environment }}
+    container:
+      image: alpine:latest
+    steps:
+      - run: echo "Hello from inside my new microk8s cluster"
+      - run: cat /etc/os-release
+      - run: hostname
+      - run: apk add kubectl --no-cache
+      - run: kubectl get all,cm,secret,ingress --all-namespaces

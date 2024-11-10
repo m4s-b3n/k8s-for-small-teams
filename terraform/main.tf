@@ -105,6 +105,8 @@ module "virtual-machine" {
       public_key = tls_private_key.this.public_key_openssh
     }
   ]
-  custom_data = data.cloudinit_config.this.rendered
-  tags        = var.tags
+  identity = {
+    type = "SystemAssigned"
+  }
+  tags = var.tags
 }
