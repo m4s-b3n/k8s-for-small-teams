@@ -1,6 +1,7 @@
 # Project Specific
 #backend.tf
 key.pem
+id_rsa.pem
 
 # Local .terraform directories
 **/.terraform/*

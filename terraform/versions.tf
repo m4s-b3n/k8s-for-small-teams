@@ -13,9 +13,5 @@ terraform {
       source  = "hashicorp/tls"
       version = "4.0.6"
     }
-    cloudinit = {
-      source  = "hashicorp/cloudinit"
-      version = "2.3.5"
-    }
   }
 }

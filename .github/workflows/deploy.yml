@@ -3,14 +3,15 @@ name: Deploy
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: ${{ github.ref }}
       cancel-in-progress: false
@@ -38,3 +39,64 @@ jobs:
             -backend-config='key=k8s-for-small-teams/infra/terraform.tfstate'
           directory: "terraform"
           apply: true
+
+  provision:
+    name: Provision
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: deploy
+    needs: deploy
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Get Secrets
+        uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ vars.KEYVAULT_NAME }}
+          secrets: >-
+            k8s-for-small-teams-fqdn,
+            k8s-for-small-teams-username,
+            k8s-for-small-teams-key
+        id: secrets
+      - name: Write Secrets
+        env:
+          KEY: ${{ secrets.APP_KEY_RUNNER_CONFIGURATOR }}
+        run: |
+          yq eval -n '
+          .additional_helm_charts.k8s-for-small-teams.helm_values.githubConfigSecret.github_app_id = "${{ secrets.APP_ID_RUNNER_CONFIGURATOR }}" |
+          .additional_helm_charts.k8s-for-small-teams.helm_values.githubConfigSecret.github_app_installation_id = "${{ secrets.APP_INSTALLATION_ID_RUNNER_CONFIGURATOR }}" |
+          .additional_helm_charts.k8s-for-small-teams.helm_values.githubConfigSecret.github_app_private_key = "${{ secrets.APP_KEY_RUNNER_CONFIGURATOR }}"
+          ' > ansible/extra_vars.yml
+      - name: Run Ansible Playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        env:
+          ANSIBLE_REMOTE_USER: ${{ steps.secrets.outputs.k8s-for-small-teams-username }}
+        with:
+          directory: ansible
+          requirements: requirements.yaml
+          playbook: microk8s.yaml
+          inventory: |
+            [all]
+            ${{ steps.secrets.outputs.k8s-for-small-teams-fqdn }}
+          key: ${{ steps.secrets.outputs.k8s-for-small-teams-key }}
+          options: |
+            --extra-vars "@extra_vars.yml"
+            --verbose
+
+  test:
+    name: Test
+    needs: provision
+    uses: ./.github/workflows/test.yml
+    with:
+      environment: test

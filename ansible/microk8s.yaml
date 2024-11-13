@@ -2,22 +2,31 @@
 - name: Install microk8s and kubectl
   become: true
   hosts: all
+  gather_facts: false
+  vars:
+    snap_channel: latest/stable
+    snap_packages:
+      - helm
+      - kubectl
+      - microk8s
   tasks:
     - name: Install
       community.general.snap:
         classic: true
-        channel: 1.31
-        name:
-          - microk8s
-          - kubectl
+        channel: "{{ snap_channel }}"
+        name: "{{ item }}"
+      loop: "{{ snap_packages }}"
 
 - name: Preparing User
   become: true
   hosts: all
+  gather_facts: false
+  vars:
+    microk8s_user: azureuser
   tasks:
     - name: Add user to microk8s group
       ansible.builtin.user:
-        name: "{{ vm_username }}"
+        name: "{{ microk8s_user }}"
         groups: microk8s
         append: true
     - name: Reset connection
@@ -26,18 +35,30 @@
 - name: Change kube folder ownership
   become: true
   hosts: all
+  gather_facts: false
+  vars:
+    microk8s_user: azureuser
   tasks:
     - name: Change ownership
       ansible.builtin.file:
-        path: /home/{{ vm_username }}/.kube
-        owner: "{{ vm_username }}"
-        group: "{{ vm_username }}"
+        path: /home/{{ microk8s_user }}/.kube
+        owner: "{{ microk8s_user }}"
+        group: "{{ microk8s_user }}"
         state: directory
         mode: "0700"
 
 - name: Enable microk8s common modules
   become: true
   hosts: all
+  gather_facts: false
+  vars:
+    microk8s_modules:
+      - cert-manager
+      - dns
+      - helm
+      - hostpath-storage
+      - ingress
+      - metallb 10.0.0.0/27
   tasks:
     - name: Enable module
       ansible.builtin.command: microk8s enable {{ item }}
@@ -47,31 +68,95 @@
 - name: Create local kubeconfig
   become: true
   hosts: all
+  gather_facts: true
+  vars:
+    microk8s_user: azureuser
   tasks:
     - name: Run microk8s config command
       ansible.builtin.command: microk8s config
       register: microk8s_config_output
       changed_when: false
-    - name: Write microk8s config to kubeconfig file
+    - name: Write microk8s config to kubeconfig file (current user)
       ansible.builtin.copy:
         content: "{{ microk8s_config_output.stdout }}"
-        dest: /home/{{ vm_username }}/.kube/config
-        owner: "{{ vm_username }}"
-        group: "{{ vm_username }}"
+        dest: "{{ ansible_user_dir }}/.kube/config"
+        owner: "{{ ansible_user_id  }}"
+        group: "{{ ansible_user_id  }}"
+        mode: "0600"
+    - name: Write microk8s config to kubeconfig file (mircok8s user)
+      ansible.builtin.copy:
+        content: "{{ microk8s_config_output.stdout }}"
+        dest: /home/{{ microk8s_user }}/.kube/config
+        owner: "{{ microk8s_user  }}"
+        group: "{{ microk8s_user  }}"
         mode: "0600"
 
-- name: Setup k8s
+- name: Install Package Dependencies
   become: true
   hosts: all
+  gather_facts: false
   tasks:
-    - name: Setup LoadBalancer for NGINX
-      ansible.builtin.command: microk8s kubectl apply -f "{{playbook_dir}}/files/loadbalancer.yaml"
-      changed_when: false
-    - name: Prepare Grafana Ingress
-      ansible.builtin.template:
-        src: "{{playbook_dir}}/files/ingress.yaml.j2"
-        dest: "{{playbook_dir}}/files/ingress.yaml"
-        mode: "0600"
-    - name: Setup Grafana Ingress
-      ansible.builtin.command: microk8s kubectl apply -f "{{playbook_dir}}/files/ingress.yaml"
-      changed_when: false
+    - name: Install python3-pip
+      ansible.builtin.apt:
+        name: python3-pip
+        update_cache: true
+
+- name: Install pip Dependencies
+  become: true
+  hosts: all
+  gather_facts: false
+  vars:
+    pip_install_packages:
+      - name: helm-python
+      - name: kubernetes
+      - name: PyYAML
+      - name: jsonpatch
+  roles:
+    - geerlingguy.pip
+
+- name: Deploy Github Runner
+  become: false
+  hosts: all
+  gather_facts: true
+  vars:
+    default_helm_charts:
+      actions-runner-controller:
+        chart_ref: "oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller"
+        chart_version: 0.9.3
+        release_namespace: actions-runner-controller
+        helm_values: {}
+      k8s-for-small-teams:
+        chart_ref: "oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set"
+        chart_version: 0.9.3
+        release_name: k8s-for-small-teams
+        release_namespace: actions-runner
+        helm_values:
+          runnerScaleSetName: k8s-for-small-teams
+          minRunners: 10
+          maxRunners: 100
+          githubConfigUrl: "https://github.com/m4s-b3n/k8s-for-small-teams"
+          # githubConfigSecret:
+          #   github_app_id: null
+          #   github_app_installation_id: null
+          #   github_app_private_key: null
+          containerMode:
+            type: "kubernetes"
+            kubernetesModeWorkVolumeClaim:
+              accessModes: ["ReadWriteOnce"]
+              storageClassName: "microk8s-hostpath"
+              resources:
+                requests:
+                  storage: 100M
+    additional_helm_charts: {}
+  tasks:
+    - name: Deploy Helm Charts
+      kubernetes.core.helm:
+        release_name: "{{ item.key }}"
+        chart_ref: "{{ item.value.chart_ref }}"
+        chart_version: "{{ item.value.chart_version }}"
+        release_namespace: "{{ item.value.release_namespace }}"
+        create_namespace: true
+        state: present
+        atomic: true
+        values: "{{ item.value.helm_values }}"
+      loop: "{{ default_helm_charts | ansible.builtin.combine(additional_helm_charts, recursive=True, list_merge='append_rp') | dict2items }}"
