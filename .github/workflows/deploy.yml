@@ -100,3 +100,16 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       environment: test
+
+  deploy-k8s:
+    name: Deploy Initial Resources
+    needs: test
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deployk8s.yml
+    with:
+      environment: deploy
+    secrets:
+      APP_ID_RUNNER_CONFIGURATOR: ${{ secrets.APP_ID_RUNNER_CONFIGURATOR }}
+      APP_INSTALLATION_ID_RUNNER_CONFIGURATOR: ${{ secrets.APP_INSTALLATION_ID_RUNNER_CONFIGURATOR }}
+      APP_KEY_RUNNER_CONFIGURATOR: ${{ secrets.APP_KEY_RUNNER_CONFIGURATOR }}

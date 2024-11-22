@@ -27,7 +27,7 @@ jobs:
       - name: Shutdown runners
         run: |
           echo "Shutting down runners"
-          helm uninstall k8s-for-small-teams -n actions-runner
+          helm list --all -n actions-runner | awk 'NR > 1 { print "--namespace "$2, $1}' | xargs --max-lines=1 helm delete
 
   terraform:
     name: Cleanup
