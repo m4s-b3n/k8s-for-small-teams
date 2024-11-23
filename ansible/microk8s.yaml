@@ -59,6 +59,7 @@
       - hostpath-storage
       - ingress
       - metallb 10.0.0.0/27
+      - observability
   tasks:
     - name: Enable module
       ansible.builtin.command: microk8s enable {{ item }}
@@ -132,13 +133,9 @@
         release_namespace: actions-runner
         helm_values:
           runnerScaleSetName: k8s-for-small-teams
-          minRunners: 10
-          maxRunners: 100
+          minRunners: 3
+          maxRunners: 10
           githubConfigUrl: "https://github.com/m4s-b3n/k8s-for-small-teams"
-          # githubConfigSecret:
-          #   github_app_id: null
-          #   github_app_installation_id: null
-          #   github_app_private_key: null
           containerMode:
             type: "kubernetes"
             kubernetesModeWorkVolumeClaim:

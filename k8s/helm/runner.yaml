@@ -1,0 +1,13 @@
+---
+runnerScaleSetName: k8s-deploy
+minRunners: 1
+maxRunners: 5
+githubConfigUrl: "https://github.com/m4s-b3n/dotnet-sample"
+containerMode:
+  type: "kubernetes"
+  kubernetesModeWorkVolumeClaim:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: "microk8s-hostpath"
+    resources:
+      requests:
+        storage: 100M
