@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Deploy microk8s
+      - name: Deploy micUbuntu VM
         uses: infinite-automations/terraform-all-in-one@v1.2.0
         with:
           init-args: >-

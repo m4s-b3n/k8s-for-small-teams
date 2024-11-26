@@ -2,7 +2,11 @@
 
 Demo for k8s usage in small teams.
 
-The repository contains workflows to setup a fully working k8s cluster:
+The repository contains an ansible playbook to setup a fully working k8s cluster on ubuntu with GitHub Action Runners deployed for the Repository itself and an additional application Repository.
+
+![Target State](./docs/target_state.jpg)
+
+The repository contains workflows to setup the k8s cluster:
 
 ```mermaid
 flowchart TD
