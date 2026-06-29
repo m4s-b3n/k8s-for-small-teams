@@ -5,7 +5,7 @@
     "ghcr.io/devcontainers/features/azure-cli:1": {
       "version": "latest"
     },
-    "ghcr.io/devcontainers/features/docker-in-docker:3": {
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {
       "moby": true,
       "azureDnsAutoDetection": true,
       "installDockerBuildx": true,
